@@ -21,11 +21,11 @@ int main(void) {
      * contains should return FALSE
      * toString should return NULL
   */
-  assert(DT_insert("1root/2child/3grandchild") == INITIALIZATION_ERROR);
-  assert(DT_contains("1root/2child/3grandchild") == FALSE);
-  assert(DT_rm("1root/2child/3grandchild") == INITIALIZATION_ERROR);
-  assert((temp = DT_toString()) == NULL);
-  assert(DT_destroy() == INITIALIZATION_ERROR);
+  assert(DT_insert("1root/2child/3grandchild") == INITIALIZATION_ERROR); /* The init has to be False as it is not initialized yet*/
+  assert(DT_contains("1root/2child/3grandchild") == FALSE); /* Should not contain any nodes yet */
+  assert(DT_rm("1root/2child/3grandchild") == INITIALIZATION_ERROR); /* Cannot remove anything yet */
+  assert((temp = DT_toString()) == NULL); /* Does not have anything to print out */
+  assert(DT_destroy() == INITIALIZATION_ERROR); /* Does not have anything to destroy */
 
   /* After initialization, the data structure is empty, so
      contains should still return FALSE for any non-NULL string,
