@@ -12,8 +12,6 @@
 #include "dynarray.h"
 #include "path.h"
 
-
-
 /* see checkerDT.h for specification */
 boolean CheckerDT_Node_isValid(Node_T oNNode) {
    Node_T oNParent;

@@ -40,6 +40,7 @@ nature of the interaction, may additionally require the interaction
 being reported to the Committee on Discipline. Write "None" if you used
 no unauthorized sources of information.
 
+Emilio Chan 
 
 
 ------------------------------------------------------------------------
@@ -119,13 +120,13 @@ the error manifests itself or is "noticed" by the client.
 ===============================================================
          ./bdtBad1       BDT_insert 
 ---------------------------------------------------------------
-         ./bdtBad2       BDT_rm 
+         ./bdtBad2       BDT_freeSubtree 
 ---------------------------------------------------------------
-         ./bdtBad3       BDT_insert 
+         ./bdtBad3       BDT_addChild 
 ---------------------------------------------------------------
-         ./bdtBad4       *BDT_toString (no explicitly tostring)
+         ./bdtBad4       BDT_strlenAccumulate
 ---------------------------------------------------------------
-         ./bdtBad5       BDT_rm  (make a copy of client --> comment out sections of it --> to see if we still have mem leak) 
+         ./bdtBad5       BDT_findNode 
 ===============================================================
 
 ------------------------------------------------------------------------
