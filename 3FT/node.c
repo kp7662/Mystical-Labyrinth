@@ -10,7 +10,7 @@
 #include "node.h"
 #include "checkerDT.h"
 
-/* A node in a DT */
+/* A node in a FT (can either be a file or a directory) */
 struct node {
    /* the object corresponding to the node's absolute path */
    Path_T oPPath;
@@ -18,6 +18,13 @@ struct node {
    Node_T oNParent;
    /* the object containing links to this node's children */
    DynArray_T oDChildren;
+
+    /* check if the node is a file */
+    boolean isFile;
+    /* contents of the file node */
+    void *contents;
+    /* content size */
+    size_t contentSize;
 };
 
 
@@ -63,7 +70,8 @@ static int Node_compareString(const Node_T oNFirst,
                  or oNParent is NULL but oPPath is not of depth 1
   * ALREADY_IN_TREE if oNParent already has a child with this path
 */
-int Node_new(Path_T oPPath, Node_T oNParent, Node_T *poNResult) {
+int Node_new(Path_T oPPath, Node_T oNParent, Node_T *poNResult, boolean isFile, void *contents, size_t contentSize) {
+   /* Intialize all arguments */
    struct node *psNew;
    Path_T oPParentPath = NULL;
    Path_T oPNewPath = NULL;

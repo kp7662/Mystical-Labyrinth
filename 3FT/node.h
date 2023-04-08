@@ -26,7 +26,12 @@ typedef struct node *Node_T;
                  or oNParent is NULL but oPPath is not of depth 1
   * ALREADY_IN_TREE if oNParent already has a child with this path
 */
-int Node_new(Path_T oPPath, Node_T oNParent, Node_T *poNResult);
+
+int Node_new(Path_T oPPath, Node_T oNParent, boolean isFile, void *contents, size_t fileSize, Node_T *poNResult);
+
+/* Can we have two functions that takes in different parameters? */
+/* int Node_new(Path_T oPPath, Node_T oNParent, Node_T *poNResult, boolean isFile); */
+
 
 /*
   Destroys and frees all memory allocated for the subtree rooted at
@@ -48,7 +53,7 @@ Path_T Node_getPath(Node_T oNNode);
   child _would_ have if inserted.
 */
 boolean Node_hasChild(Node_T oNParent, Path_T oPPath,
-                         size_t *pulChildID);
+                         size_t *pulChildID, boolean isFile);
 
 /* Returns the number of children that oNParent has. */
 size_t Node_getNumChildren(Node_T oNParent);
@@ -83,5 +88,6 @@ int Node_compare(Node_T oNFirst, Node_T oNSecond);
   the caller!
 */
 char *Node_toString(Node_T oNNode);
+
 
 #endif
