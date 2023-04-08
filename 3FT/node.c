@@ -3,6 +3,8 @@
 /* Author: Kok Wei Pua and Cherie Jiraphanphong                       */
 /*--------------------------------------------------------------------*/
 
+/* Do we need to put child in lexicographic order through Node*/
+
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
@@ -80,7 +82,7 @@ int Node_new(Path_T oPPath, Node_T oNParent, Node_T *poNResult, boolean isFile, 
    int iStatus;
 
    assert(oPPath != NULL);
-   assert(oNParent == NULL || CheckerDT_Node_isValid(oNParent));
+   /* assert(oNParent == NULL || CheckerDT_Node_isValid(oNParent)); */ /* Do we need this? */
 
    /* allocate space for a new node */
    psNew = malloc(sizeof(struct node));
@@ -123,14 +125,23 @@ int Node_new(Path_T oPPath, Node_T oNParent, Node_T *poNResult, boolean isFile, 
       }
 
       /* parent must not already have child with this path */
-      if(Node_hasChild(oNParent, oPPath, &ulIndex)) {
-         Path_free(psNew->oPPath);
-         free(psNew);
-         *poNResult = NULL;
-         return ALREADY_IN_TREE;
+      if(oNParent->isFile == FALSE) {
+         if(Node_hasChild(oNParent, oPPath, &ulIndex)) {
+            Path_free(psNew->oPPath);
+            free(psNew);
+            *poNResult = NULL;
+            return ALREADY_IN_TREE;
+         }
+      } 
+      else {
+            Path_free(psNew->oPPath);
+            free(psNew);
+            *poNResult = NULL;
+            return NO_SUCH_PATH; /* Need to double-check */
       }
-   }
-   else {
+    }
+    
+    else {
       /* new node must be root */
       /* can only create one "level" at a time */
       if(Path_getDepth(psNew->oPPath) != 1) {
@@ -143,12 +154,38 @@ int Node_new(Path_T oPPath, Node_T oNParent, Node_T *poNResult, boolean isFile, 
    psNew->oNParent = oNParent;
 
    /* initialize the new node */
-   psNew->oDChildren = DynArray_new(0);
-   if(psNew->oDChildren == NULL) {
-      Path_free(psNew->oPPath);
-      free(psNew);
-      *poNResult = NULL;
-      return MEMORY_ERROR;
+   psNew->isFile = isFile;
+   if(psNew->isFile == TRUE) {
+      /* Need to consider what happen when contents = NULL. */
+      if(contents == NULL) {
+         psNew->contents = NULL;
+         psNew->contentSize = 0; 
+      }
+      else {
+         psNew->contents = (void *)malloc(sizeof(contentSize));
+         if(psNew->contents == NULL) {
+         Path_free(psNew->oPPath);
+         free(psNew);
+         *poNResult = NULL;
+         return MEMORY_ERROR;
+         }
+         else {
+            /* Defensive copy of the node's content*/
+            psNew->contents = strcpy((void*)psNew->contents, contents);
+         }
+         psNew->contentSize = contentSize; 
+         psNew->oDChildren = NULL; /* Double check */
+      }
+   }
+    /* if new node is a directory */
+   else {
+      psNew->oDChildren = DynArray_new(0);
+      if(psNew->oDChildren == NULL) {
+         Path_free(psNew->oPPath);
+         free(psNew);
+         *poNResult = NULL;
+         return MEMORY_ERROR;
+      }
    }
 
    /* Link into parent's children list */
@@ -164,8 +201,9 @@ int Node_new(Path_T oPPath, Node_T oNParent, Node_T *poNResult, boolean isFile, 
 
    *poNResult = psNew;
 
-   assert(oNParent == NULL || CheckerDT_Node_isValid(oNParent));
-   assert(CheckerDT_Node_isValid(*poNResult));
+    /* Do we need CheckerDT_Node_isValid? Do we need to write our own checker function? */
+      /* assert(oNParent == NULL || CheckerDT_Node_isValid(oNParent)); */
+      /* assert(CheckerDT_Node_isValid(*poNResult)); */ 
 
    return SUCCESS;
 }
@@ -175,7 +213,7 @@ size_t Node_free(Node_T oNNode) {
    size_t ulCount = 0;
 
    assert(oNNode != NULL);
-   assert(CheckerDT_Node_isValid(oNNode));
+   /* assert(CheckerDT_Node_isValid(oNNode)); */
 
    /* remove from parent's list */
    if(oNNode->oNParent != NULL) {
@@ -189,11 +227,16 @@ size_t Node_free(Node_T oNNode) {
    }
 
    /* recursively remove children */
-   while(DynArray_getLength(oNNode->oDChildren) != 0) {
-      ulCount += Node_free(DynArray_get(oNNode->oDChildren, 0));
+   if (oNNode->isFile == FALSE) {
+        while(DynArray_getLength(oNNode->oDChildren) != 0) {
+            ulCount += Node_free(DynArray_get(oNNode->oDChildren, 0));
+        }
+        DynArray_free(oNNode->oDChildren);
    }
-   DynArray_free(oNNode->oDChildren);
-
+   else {
+      DynArray_free(oNNode->oDChildren);
+   }
+   
    /* remove path */
    Path_free(oNNode->oPPath);
 
@@ -215,6 +258,11 @@ boolean Node_hasChild(Node_T oNParent, Path_T oPPath,
    assert(oPPath != NULL);
    assert(pulChildID != NULL);
 
+   /* If the node is a file. */
+   if (oNParent->isFile == TRUE) {
+      return FALSE; 
+   }
+   
    /* *pulChildID is the index into oNParent->oDChildren */
    return DynArray_bsearch(oNParent->oDChildren,
             (char*) Path_getPathname(oPPath), pulChildID,
@@ -224,15 +272,25 @@ boolean Node_hasChild(Node_T oNParent, Path_T oPPath,
 size_t Node_getNumChildren(Node_T oNParent) {
    assert(oNParent != NULL);
 
+   /* If node is a file */
+   if (oNParent->isFile == TRUE) {
+      return 0; 
+   }
+
    return DynArray_getLength(oNParent->oDChildren);
 }
 
-int  Node_getChild(Node_T oNParent, size_t ulChildID,
+int Node_getChild(Node_T oNParent, size_t ulChildID,
                    Node_T *poNResult) {
 
    assert(oNParent != NULL);
    assert(poNResult != NULL);
 
+   /* If node is a file. */
+   if(oNParent->isFile == TRUE) {
+      return NO_SUCH_PATH; 
+   }
+   
    /* ulChildID is the index into oNParent->oDChildren */
    if(ulChildID >= Node_getNumChildren(oNParent)) {
       *poNResult = NULL;
@@ -257,6 +315,8 @@ int Node_compare(Node_T oNFirst, Node_T oNSecond) {
    return Path_comparePath(oNFirst->oPPath, oNSecond->oPPath);
 }
 
+/* Not sure if need to change anything and if iterating through the children of both directory and 
+files has an effect on how it iterates through. */
 char *Node_toString(Node_T oNNode) {
    char *copyPath;
 
@@ -267,4 +327,42 @@ char *Node_toString(Node_T oNNode) {
       return NULL;
    else
       return strcpy(copyPath, Path_getPathname(Node_getPath(oNNode)));
+}
+
+void *Node_replaceFileContents(Node_T oNNode, void *pvContents, size_t newContentSize) {
+   const void *pvOldContents; 
+   void *pvNewContent;
+
+   if (oNNode->isFile == FALSE) {
+      return NULL; 
+   }
+   
+   pvOldContents = oNNode->contents;
+   
+   pvNewContent = (void *)malloc(sizeof(newContentSize));
+   if(pvNewContent == NULL) {
+      return MEMORY_ERROR; 
+   }
+   else {
+      pvNewContent = strcpy(pvNewContent, pvContents);
+      oNNode->contents = pvNewContent;
+      oNNode->contentSize = newContentSize;
+   }
+   return pvOldContents; 
+}
+
+void *Node_getFileContents(Node_T oNNode) {
+   if (oNNode->isFile == FALSE) {
+      return NULL; 
+   }
+
+   return oNNode->contents;
+}
+
+size_t Node_getContentLength(Node_T oNNode) {
+   if (oNNode->isFile == FALSE) {
+      return 0; /* should it be 0 or null */ 
+   }
+
+   return oNNode->contentSize; 
 }

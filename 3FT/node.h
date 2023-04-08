@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/* nodeDT.h                                                           */
+/* node.h                                                           */
 /* Author: Kok Wei Pua and Cherie Jiraphanphong                       */
 /*--------------------------------------------------------------------*/
 
@@ -27,7 +27,7 @@ typedef struct node *Node_T;
   * ALREADY_IN_TREE if oNParent already has a child with this path
 */
 
-int Node_new(Path_T oPPath, Node_T oNParent, boolean isFile, void *contents, size_t fileSize, Node_T *poNResult);
+int Node_new(Path_T oPPath, Node_T oNParent, Node_T *poNResult, boolean isFile, void *contents, size_t contentSize);
 
 /* Can we have two functions that takes in different parameters? */
 /* int Node_new(Path_T oPPath, Node_T oNParent, Node_T *poNResult, boolean isFile); */
@@ -53,7 +53,7 @@ Path_T Node_getPath(Node_T oNNode);
   child _would_ have if inserted.
 */
 boolean Node_hasChild(Node_T oNParent, Path_T oPPath,
-                         size_t *pulChildID, boolean isFile);
+                         size_t *pulChildID);
 
 /* Returns the number of children that oNParent has. */
 size_t Node_getNumChildren(Node_T oNParent);
@@ -89,5 +89,14 @@ int Node_compare(Node_T oNFirst, Node_T oNSecond);
 */
 char *Node_toString(Node_T oNNode);
 
+
+/* Replace contents of inside a node file. Return old contents */
+void *Node_replaceFileContents(Node_T oNNode, void *pvContents, size_t newContentSize);
+
+/* Get contents from a node file */
+void * Node_getFileContents(Node_T oNNode);
+
+/* get content length */
+size_t Node_getContentLength(Node_T oNNode);
 
 #endif
