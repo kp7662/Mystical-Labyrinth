@@ -12,6 +12,8 @@
 #include "node.h"
 #include "checkerDT.h"
 
+/* Can we assume contents is string? */
+
 /* A node in a FT (can either be a file or a directory) */
 struct node {
    /* the object corresponding to the node's absolute path */
@@ -162,17 +164,7 @@ int Node_new(Path_T oPPath, Node_T oNParent, Node_T *poNResult, boolean isFile, 
          psNew->contentSize = 0; 
       }
       else {
-         psNew->contents = (void *)malloc(sizeof(contentSize));
-         if(psNew->contents == NULL) {
-         Path_free(psNew->oPPath);
-         free(psNew);
-         *poNResult = NULL;
-         return MEMORY_ERROR;
-         }
-         else {
-            /* Defensive copy of the node's content*/
-            psNew->contents = strcpy((void*)psNew->contents, contents);
-         }
+         psNew->contents = contents; 
          psNew->contentSize = contentSize; 
          psNew->oDChildren = NULL; /* Double check */
       }

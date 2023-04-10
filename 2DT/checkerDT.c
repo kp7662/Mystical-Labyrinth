@@ -139,7 +139,7 @@ boolean CheckerDT_isValid(boolean bIsInitialized, Node_T oNRoot,
       } 
 
       /* Now checks invariants recursively at each node from the root. */
-      /* Need a counter tocount the number of node that tree goes true, send a pointer to the recurisive function */
+      /* Need a counter to count the number of node that tree goes true, send a pointer to the recurisive function */
       iStatus = CheckerDT_treeCheck(oNRoot, &counter);
 
       if (iStatus == FALSE) return FALSE; 
