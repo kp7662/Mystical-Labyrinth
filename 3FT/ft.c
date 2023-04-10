@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------*/
 /* ft.c                                                               */
-/* Author: Kok Wei Pua and Cherie Jiraphanphong                                        */
+/* Author: Kok Wei Pua and Cherie Jiraphanphong                       */
 /*--------------------------------------------------------------------*/
 
 #include <stddef.h>
@@ -14,10 +14,43 @@
 #include "node.h"
 #include "ft.h"
 
+/* Questions: */
+/* 
+Q1: Because the lexicographic order is implemented in dynarray, can we assume 
+that it inserts the file and director based on lexicographic order like in 2DT? 
+
+Q2: How to implement toString? Do we implement in FT or node? See node.c Line 313?
+
+Q3: In node.c Line 144. Because this is a file, it cannot have child. So, does it mean
+    the error would be NO_SUCH_PATH or ALREADY_IN_TREE? (Yes/No, Can ask in Ed)
+
+Q4: In node.c Line 169: Because file cannot have children, can we just 
+point psNew->oDChildren to NULL? (Yes/no, can ask in Ed)
+
+Q5: Not sure if need to change anything and if iterating through the children of both directory and 
+files has an effect on how it iterates through. 
+
+Q6: Are we implementing the "copy content" parts right in Line 447 (Replace File) 
+since we do not create a defensive copy (cannot use strcpy)? 
+
+Q7: Do we need to write a CheckerFT module? (Can ask in Ed)
+
+Q8: When we insert a file, can we just copy the logic from the directory? (Can ask in Ed)
+
+Q9: In Line 178: if (oNCurr == NULL && oNCurr->isFile == TRUE) {
+Error: pointer to incomplete class type "struct node" is not allowed (Can ask in Ed)
+
+*/
+
+
+
+
+
 /*
   A Directory-File Tree is a representation of a hierarchy of directories and files,
   represented as an AO with 3 state variables:
 */
+
 
 /* 1. a flag for being in an initialized state (TRUE) or not (FALSE) */
 static boolean bIsInitialized;
@@ -298,8 +331,8 @@ int FT_insertFile(const char *pcPath, void *pvContents,
    }
 
    /* Check whether if parent is a file */
-   if (oNCurr == NULL && oNCurr->isFile == TRUE) {
-        return NOT_A_DIRECTORY;
+   if (oNCurr == NULL && oNCurr->isFile == FALSE) {
+        return NOT_A_FILE;
      }
 
    /* no ancestor node found, so if root is not NULL,
@@ -339,7 +372,7 @@ int FT_insertFile(const char *pcPath, void *pvContents,
       }
 
       /* insert the new node for this level */
-      iStatus = Node_new(oPPrefix, oNCurr, &oNNewNode, FALSE, NULL, 0);
+      iStatus = Node_new(oPPrefix, oNCurr, &oNNewNode, TRUE, pvContents, ulLength);
       if(iStatus != SUCCESS) {
          Path_free(oPPath);
          Path_free(oPPrefix);
@@ -455,10 +488,62 @@ void *FT_replaceFileContents(const char *pcPath, void *pvNewContents,
    return pvOldContents;    
 }
 
-int FT_stat(const char *pcPath, boolean *pbIsFile, size_t *pulSize);
+int FT_stat(const char *pcPath, boolean *pbIsFile, size_t *pulSize) {
+   int iStatus;
+   Node_T oNFound = NULL;
 
-int FT_init(void);
+   assert(pcPath != NULL);
+   assert(pbIsFile != NULL);
+   assert(pulSize != NULL);
+   /* assert(CheckerDT_isValid(bIsInitialized, oNRoot, ulCount)); */
 
-int FT_destroy(void);
+   iStatus = FT_findNode(pcPath, &oNFound);
 
-char *FT_toString(void);
+   if(oNFound->isFile == TRUE) {
+      pbIsFile = TRUE; 
+      pulSize = oNFound->contentSize;
+   }
+   else {
+      pbIsFile = FALSE; 
+   }
+   
+   return (boolean) (iStatus == SUCCESS);
+}
+
+int FT_init(void) {
+   /* assert(CheckerDT_isValid(bIsInitialized, oNRoot, ulCount)); */ 
+
+   if(bIsInitialized)
+      return INITIALIZATION_ERROR;
+
+   bIsInitialized = TRUE;
+   oNRoot = NULL;
+   ulCount = 0;
+
+   /* assert(CheckerDT_isValid(bIsInitialized, oNRoot, ulCount)); */ 
+   return SUCCESS;
+}
+
+int FT_destroy(void) {
+   /* assert(CheckerDT_isValid(bIsInitialized, oNRoot, ulCount));*/
+
+   if(!bIsInitialized)
+      return INITIALIZATION_ERROR;
+
+   if(oNRoot) {
+      ulCount -= Node_free(oNRoot);
+      oNRoot = NULL;
+   }
+
+   bIsInitialized = FALSE;
+
+   /* assert(CheckerDT_isValid(bIsInitialized, oNRoot, ulCount)); */ 
+   return SUCCESS;
+}
+
+/* Most challenging part */
+char *FT_toString(void) {
+   /* oNCurr iterates through all nodes, oNCurr is set to root initially, traverse down to children, 
+   upon reaching a new node, we check if the node is a file or a dict. If it is a file, we print it. 
+   If it is a directory, we skip it? How can we come back to the dict that we skipped? */
+}
