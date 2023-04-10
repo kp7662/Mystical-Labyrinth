@@ -17,23 +17,15 @@
 /* Questions: */
 /* 
 Q1: Because the lexicographic order is implemented in dynarray, can we assume 
-that it inserts the file and director based on lexicographic order like in 2DT? 
+that it inserts the file and director based on lexicographic order like in 2DT? YES
 
 Q2: How to implement toString? Do we implement in FT or node? See node.c Line 313?
-
-Q3: In node.c Line 144. Because this is a file, it cannot have child. So, does it mean
-    the error would be NO_SUCH_PATH or ALREADY_IN_TREE? (Yes/No, Can ask in Ed)
 
 Q4: In node.c Line 169: Because file cannot have children, can we just 
 point psNew->oDChildren to NULL? (Yes/no, can ask in Ed)
 
 Q5: Not sure if need to change anything and if iterating through the children of both directory and 
 files has an effect on how it iterates through. 
-
-Q6: Are we implementing the "copy content" parts right in Line 447 (Replace File) 
-since we do not create a defensive copy (cannot use strcpy)? 
-
-Q7: Do we need to write a CheckerFT module? (Can ask in Ed)
 
 Q8: When we insert a file, can we just copy the logic from the directory? (Can ask in Ed)
 
@@ -302,6 +294,8 @@ int FT_rmDir(const char *pcPath) {
    return SUCCESS;
 }
 
+/* Make sure that inserting missing directory before a file*/
+/* File cannoy be the first to insert */
 int FT_insertFile(const char *pcPath, void *pvContents,
                   size_t ulLength) {
    int iStatus;
@@ -541,9 +535,90 @@ int FT_destroy(void) {
    return SUCCESS;
 }
 
-/* Most challenging part */
+/* --------------------------------------------------------------------
+
+  The following auxiliary functions are used for generating the
+  string representation of the DT.
+*/
+
+/*
+  Performs a pre-order traversal of the tree rooted at n,
+  inserting each payload to DynArray_T d beginning at index i.
+  Returns the next unused index in d after the insertion(s).
+*/
+
+/* Add the file for loop not nested */ 
+static size_t DT_preOrderTraversal(Node_T n, DynArray_T d, size_t i) {
+   size_t c;
+
+   assert(d != NULL);
+
+   if(n != NULL) {
+      (void) DynArray_set(d, i, n);
+      i++;
+      for(c = 0; c < Node_getNumChildren(n); c++) {
+         int iStatus;
+         Node_T oNChild = NULL;
+         iStatus = Node_getChild(n,c, &oNChild);
+         assert(iStatus == SUCCESS);
+         i = DT_preOrderTraversal(oNChild, d, i);
+      }
+   }
+   return i;
+}
+
+/*
+  Alternate version of strlen that uses pulAcc as an in-out parameter
+  to accumulate a string length, rather than returning the length of
+  oNNode's path, and also always adds one addition byte to the sum.
+*/
+static void DT_strlenAccumulate(Node_T oNNode, size_t *pulAcc) {
+   assert(pulAcc != NULL);
+
+   if(oNNode != NULL)
+      *pulAcc += (Path_getStrLength(Node_getPath(oNNode)) + 1);
+}
+
+/*
+  Alternate version of strcat that inverts the typical argument
+  order, appending oNNode's path onto pcAcc, and also always adds one
+  newline at the end of the concatenated string.
+*/
+static void DT_strcatAccumulate(Node_T oNNode, char *pcAcc) {
+   assert(pcAcc != NULL);
+
+   if(oNNode != NULL) {
+      strcat(pcAcc, Path_getPathname(Node_getPath(oNNode)));
+      strcat(pcAcc, "\n");
+   }
+}
+/*--------------------------------------------------------------------*/
+
 char *FT_toString(void) {
-   /* oNCurr iterates through all nodes, oNCurr is set to root initially, traverse down to children, 
-   upon reaching a new node, we check if the node is a file or a dict. If it is a file, we print it. 
-   If it is a directory, we skip it? How can we come back to the dict that we skipped? */
+   DynArray_T nodes;
+   size_t totalStrlen = 1;
+   char *result = NULL;
+
+   if(!bIsInitialized)
+      return NULL;
+
+   nodes = DynArray_new(ulCount);
+   (void) DT_preOrderTraversal(oNRoot, nodes, 0);
+
+   DynArray_map(nodes, (void (*)(void *, void*)) DT_strlenAccumulate,
+                (void*) &totalStrlen);
+
+   result = malloc(totalStrlen);
+   if(result == NULL) {
+      DynArray_free(nodes);
+      return NULL;
+   }
+   *result = '\0';
+
+   DynArray_map(nodes, (void (*)(void *, void*)) DT_strcatAccumulate,
+                (void *) result);
+
+   DynArray_free(nodes);
+
+   return result;
 }

@@ -135,13 +135,11 @@ int Node_new(Path_T oPPath, Node_T oNParent, Node_T *poNResult, boolean isFile, 
             return ALREADY_IN_TREE;
          }
       } 
-      /* Because this is a file, it cannot have child. So, does it mean
-      the error would be NO_SUCH_PATH or ALREADY_IN_TREE? */
       else {
             Path_free(psNew->oPPath);
             free(psNew);
             *poNResult = NULL;
-            return NO_SUCH_PATH; /* Need to double-check */
+            return NOT_A_DIRECTORY; 
       }
     }
     
