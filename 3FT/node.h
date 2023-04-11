@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/* node.h                                                           */
+/* node.h                                                             */
 /* Author: Kok Wei Pua and Cherie Jiraphanphong                       */
 /*--------------------------------------------------------------------*/
 
@@ -90,8 +90,11 @@ int Node_compare(Node_T oNFirst, Node_T oNSecond);
 char *Node_toString(Node_T oNNode);
 
 
+/* Check to see if node is a file (TRUE) or directory (FALSE) */
+boolean Node_getIsFile(Node_T oNNode);
+
 /* Replace contents of inside a node file. Return old contents */
-void *Node_replaceFileContents(Node_T oNNode, void *pvContents, size_t newContentSize);
+void *Node_replaceFileContents(Node_T oNNode, void *pvContents, size_t newContentSize);  
 
 /* Get contents from a node file */
 void * Node_getFileContents(Node_T oNNode);

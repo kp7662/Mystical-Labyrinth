@@ -200,7 +200,7 @@ int DT_insert(const char *pcPath) {
       return CONFLICTING_PATH;
    }
 
-   ulDepth = Path_getDepth(oPPath);
+   
    if(oNCurr == NULL) /* new root! */
       ulIndex = 1;
    else {

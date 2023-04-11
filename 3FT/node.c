@@ -10,7 +10,6 @@
 #include <string.h>
 #include "dynarray.h"
 #include "node.h"
-#include "checkerDT.h"
 
 /* Can we assume contents is string? */
 
@@ -322,29 +321,31 @@ char *Node_toString(Node_T oNNode) {
       return strcpy(copyPath, Path_getPathname(Node_getPath(oNNode)));
 }
 
-void *Node_replaceFileContents(Node_T oNNode, void *pvContents, size_t newContentSize) {
+void *Node_replaceFileContents(Node_T oNNode, void *pvNewContents, size_t newContentSize) {
    const void *pvOldContents; 
-   void *pvNewContent;
+
+   assert(oNNode != NULL);
 
    if (oNNode->isFile == FALSE) {
       return NULL; 
    }
    
    pvOldContents = oNNode->contents;
+   oNNode->contents = pvNewContents;
+   oNNode->contentSize = newContentSize;
    
-   pvNewContent = (void *)malloc(sizeof(newContentSize));
-   if(pvNewContent == NULL) {
-      return MEMORY_ERROR; 
-   }
-   else {
-      pvNewContent = strcpy(pvNewContent, pvContents);
-      oNNode->contents = pvNewContent;
-      oNNode->contentSize = newContentSize;
-   }
-   return pvOldContents; 
+   return (void*)pvOldContents;
+}
+
+boolean Node_getIsFile(Node_T oNNode) {
+   assert(oNNode != NULL);
+
+   return oNNode->isFile; 
 }
 
 void *Node_getFileContents(Node_T oNNode) {
+   assert(oNNode != NULL);
+
    if (oNNode->isFile == FALSE) {
       return NULL; 
    }
@@ -353,6 +354,8 @@ void *Node_getFileContents(Node_T oNNode) {
 }
 
 size_t Node_getContentLength(Node_T oNNode) {
+   assert(oNNode != NULL);
+
    if (oNNode->isFile == FALSE) {
       return 0; /* should it be 0 or null */ 
    }

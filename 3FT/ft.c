@@ -51,7 +51,7 @@ static Node_T oNRoot;
 /* 3. a counter of the number of nodes in the hierarchy */
 static size_t ulCount;
 
-static int DT_traversePath(Path_T oPPath, Node_T *poNFurthest) {
+static int FT_traversePath(Path_T oPPath, Node_T *poNFurthest) {
    int iStatus;
    Path_T oPPrefix = NULL;
    Node_T oNCurr;
@@ -112,7 +112,7 @@ static int DT_traversePath(Path_T oPPath, Node_T *poNFurthest) {
    return SUCCESS;
 }
 
-static int DT_findNode(const char *pcPath, Node_T *poNResult) {
+static int FT_findNode(const char *pcPath, Node_T *poNResult) {
    Path_T oPPath = NULL;
    Node_T oNFound = NULL;
    int iStatus;
@@ -131,7 +131,7 @@ static int DT_findNode(const char *pcPath, Node_T *poNResult) {
       return iStatus;
    }
 
-   iStatus = DT_traversePath(oPPath, &oNFound);
+   iStatus = FT_traversePath(oPPath, &oNFound);
    if(iStatus != SUCCESS)
    {
       Path_free(oPPath);
@@ -184,7 +184,8 @@ int FT_insertDir(const char *pcPath) {
    }
 
    /* Check whether if parent is a file */
-   if (oNCurr == NULL && oNCurr->isFile == TRUE) {
+   /* Write a getter function of the file state */
+   if (oNCurr == NULL &&  Node_getIsFile(oNCurr) == TRUE) {
         return NOT_A_DIRECTORY;
      }
 
@@ -263,7 +264,7 @@ boolean FT_containsDir(const char *pcPath) {
 
    iStatus = FT_findNode(pcPath, &oNFound);
 
-   if(oNFound->isFile == TRUE) {
+   if(Node_getIsFile(oNFound) == TRUE) {
     iStatus = NOT_A_DIRECTORY; 
    } 
 
@@ -277,9 +278,9 @@ int FT_rmDir(const char *pcPath) {
    assert(pcPath != NULL);
    /* assert(CheckerDT_isValid(bIsInitialized, oNRoot, ulCount)); */
 
-   iStatus = DT_findNode(pcPath, &oNFound);
+   iStatus = FT_findNode(pcPath, &oNFound);
 
-   if(oNFound->isFile == TRUE) {
+   if(Node_getIsFile(oNFound) == TRUE) {
     return NOT_A_DIRECTORY;
    }
 
@@ -301,6 +302,7 @@ int FT_insertFile(const char *pcPath, void *pvContents,
    int iStatus;
    Path_T oPPath = NULL;
    Node_T oNFirstNew = NULL;
+   Node_T oNNewNode = NULL;
    Node_T oNCurr = NULL;
    size_t ulDepth, ulIndex;
    size_t ulNewNodes = 0;
@@ -308,14 +310,16 @@ int FT_insertFile(const char *pcPath, void *pvContents,
    assert(pcPath != NULL);
    /* assert(CheckerDT_isValid(bIsInitialized, oNRoot, ulCount)); */
 
-   /* validate pcPath and generate a Path_T for it */
+   /* validate pcPath */
    if(!bIsInitialized)
       return INITIALIZATION_ERROR;
-
+   
+   /* Generate a Path_T for pcPath */
    iStatus = Path_new(pcPath, &oPPath);
    if(iStatus != SUCCESS)
       return iStatus;
-
+   
+   
    /* find the closest ancestor of oPPath already in the tree */
    iStatus= FT_traversePath(oPPath, &oNCurr);
    if(iStatus != SUCCESS)
@@ -323,11 +327,6 @@ int FT_insertFile(const char *pcPath, void *pvContents,
       Path_free(oPPath);
       return iStatus;
    }
-
-   /* Check whether if parent is a file */
-   if (oNCurr == NULL && oNCurr->isFile == FALSE) {
-        return NOT_A_FILE;
-     }
 
    /* no ancestor node found, so if root is not NULL,
       pcPath isn't underneath root. */
@@ -337,6 +336,17 @@ int FT_insertFile(const char *pcPath, void *pvContents,
    }
 
    ulDepth = Path_getDepth(oPPath);
+
+   /* cannot insert file at the root. */
+   if(oNCurr == NULL && ulDepth == 1) {
+      return CONFLICTING_PATH;
+   }
+   
+   /* Check whether if parent is a file */
+   if (Node_getIsFile(oNCurr) == FALSE) {
+        return NOT_A_FILE;
+   }
+
    if(oNCurr == NULL) /* new root! */
       ulIndex = 1;
    else {
@@ -351,9 +361,9 @@ int FT_insertFile(const char *pcPath, void *pvContents,
    }
 
    /* starting at oNCurr, build rest of the path one level at a time */
-   while(ulIndex <= ulDepth) {
+   while(ulIndex < ulDepth) {
       Path_T oPPrefix = NULL;
-      Node_T oNNewNode = NULL;
+      Node_T oNPrefixNewNode = NULL;
 
       /* generate a Path_T for this level */
       iStatus = Path_prefix(oPPath, ulIndex, &oPPrefix);
@@ -366,7 +376,7 @@ int FT_insertFile(const char *pcPath, void *pvContents,
       }
 
       /* insert the new node for this level */
-      iStatus = Node_new(oPPrefix, oNCurr, &oNNewNode, TRUE, pvContents, ulLength);
+      iStatus = Node_new(oPPrefix, oNCurr, &oNPrefixNewNode, FALSE, NULL, 0);
       if(iStatus != SUCCESS) {
          Path_free(oPPath);
          Path_free(oPPrefix);
@@ -378,15 +388,35 @@ int FT_insertFile(const char *pcPath, void *pvContents,
 
       /* set up for next level */
       Path_free(oPPrefix);
-      oNCurr = oNNewNode;
+      oNCurr = oNPrefixNewNode;
       ulNewNodes++;
       if(oNFirstNew == NULL)
          oNFirstNew = oNCurr;
       ulIndex++;
    }
 
+   /* Insert file new node */
+   iStatus = Node_new(oPPath, oNCurr, &oNNewNode, TRUE, pvContents, ulLength);
+   if(iStatus != SUCCESS) {
+      Path_free(oPPath);
+      if(oNFirstNew != NULL)
+         (void) Node_free(oNFirstNew);
+      /* assert(CheckerDT_isValid(bIsInitialized, oNRoot, ulCount)); */
+      return iStatus;
+   }
+
+   oNCurr = oNNewNode;
+   ulNewNodes++;
+   if(oNFirstNew == NULL)
+      oNFirstNew = oNCurr;
+   ulIndex++;
+
+   oNCurr = oNNewNode;
+   ulNewNodes++;
+   ulIndex++;
+
    Path_free(oPPath);
-   /* update FT state variables to reflect insertion */
+   /* update DT state variables to reflect insertion */
    if(oNRoot == NULL)
       oNRoot = oNFirstNew;
    ulCount += ulNewNodes;
@@ -404,7 +434,7 @@ boolean FT_containsFile(const char *pcPath) {
 
    iStatus = FT_findNode(pcPath, &oNFound);
 
-   if(oNFound->isFile == FALSE) {
+   if(Node_getIsFile(oNFound) == FALSE) {
     iStatus = NOT_A_FILE; 
    } 
 
@@ -418,9 +448,9 @@ int FT_rmFile(const char *pcPath) {
    assert(pcPath != NULL);
    /* assert(CheckerDT_isValid(bIsInitialized, oNRoot, ulCount)); */
 
-   iStatus = DT_findNode(pcPath, &oNFound);
+   iStatus = FT_findNode(pcPath, &oNFound);
 
-   if(oNFound->isFile == FALSE) {
+   if(Node_getIsFile(oNFound) == FALSE) {
     return NOT_A_FILE;
    }
 
@@ -445,20 +475,19 @@ void *FT_getFileContents(const char *pcPath) {
 
    iStatus = FT_findNode(pcPath, &oNFound);
 
-   if(oNFound->isFile == FALSE) {
-       return NOT_A_FILE;
+   if(Node_getIsFile(oNFound) == FALSE) {
+       return NULL;
    }
 
    if(iStatus != SUCCESS) {
-       return iStatus;
+      return NULL;
    } 
 
-   return (void*) oNFound->contents; 
+   return (void*)Node_getFileContents(oNFound); 
 }
 
 void *FT_replaceFileContents(const char *pcPath, void *pvNewContents,
-                             size_t ulNewLength) {
-    const void *pvOldContents; 
+                             size_t ulNewLength) { 
     int iStatus;
     Node_T oNFound = NULL;
 
@@ -467,19 +496,15 @@ void *FT_replaceFileContents(const char *pcPath, void *pvNewContents,
 
    iStatus = FT_findNode(pcPath, &oNFound);
 
-   if(oNFound->isFile == FALSE) {
-       return NOT_A_FILE;
+   if(Node_getIsFile(oNFound) == FALSE) {
+       return NULL;
    }
 
    if(iStatus != SUCCESS) {
-       return iStatus;
+       return NULL;
    } 
 
-   pvOldContents = oNFound->contents;
-   oNFound->contents = pvNewContents; 
-   oNFound->contentSize = ulNewLength; 
-   
-   return pvOldContents;    
+   return (void*)Node_replaceFileContents(oNFound, pvNewContents, ulNewLength);     
 }
 
 int FT_stat(const char *pcPath, boolean *pbIsFile, size_t *pulSize) {
@@ -493,12 +518,12 @@ int FT_stat(const char *pcPath, boolean *pbIsFile, size_t *pulSize) {
 
    iStatus = FT_findNode(pcPath, &oNFound);
 
-   if(oNFound->isFile == TRUE) {
-      pbIsFile = TRUE; 
-      pulSize = oNFound->contentSize;
+   if(Node_getIsFile(oNFound) == TRUE) {
+      *pbIsFile = TRUE; 
+      *pulSize = Node_getContentLength(oNFound);
    }
    else {
-      pbIsFile = FALSE; 
+      *pbIsFile = FALSE; 
    }
    
    return (boolean) (iStatus == SUCCESS);
@@ -548,7 +573,7 @@ int FT_destroy(void) {
 */
 
 /* Add the file for loop not nested */ 
-static size_t DT_preOrderTraversal(Node_T n, DynArray_T d, size_t i) {
+static size_t FT_preOrderTraversal(Node_T n, DynArray_T d, size_t i) {
    size_t c;
 
    assert(d != NULL);
@@ -561,7 +586,20 @@ static size_t DT_preOrderTraversal(Node_T n, DynArray_T d, size_t i) {
          Node_T oNChild = NULL;
          iStatus = Node_getChild(n,c, &oNChild);
          assert(iStatus == SUCCESS);
-         i = DT_preOrderTraversal(oNChild, d, i);
+         if(Node_getIsFile(oNChild) == TRUE) {
+            DynArray_set(d, i, oNChild);
+            i++;
+         }
+      }
+      
+      for(c = 0; c < Node_getNumChildren(n); c++) {
+         int iStatus;
+         Node_T oNChild = NULL;
+         iStatus = Node_getChild(n,c, &oNChild);
+         assert(iStatus == SUCCESS);
+         if(Node_getIsFile(oNChild) == FALSE) {
+            i = FT_preOrderTraversal(oNChild, d, i);
+         }
       }
    }
    return i;
@@ -572,7 +610,7 @@ static size_t DT_preOrderTraversal(Node_T n, DynArray_T d, size_t i) {
   to accumulate a string length, rather than returning the length of
   oNNode's path, and also always adds one addition byte to the sum.
 */
-static void DT_strlenAccumulate(Node_T oNNode, size_t *pulAcc) {
+static void FT_strlenAccumulate(Node_T oNNode, size_t *pulAcc) {
    assert(pulAcc != NULL);
 
    if(oNNode != NULL)
@@ -584,7 +622,7 @@ static void DT_strlenAccumulate(Node_T oNNode, size_t *pulAcc) {
   order, appending oNNode's path onto pcAcc, and also always adds one
   newline at the end of the concatenated string.
 */
-static void DT_strcatAccumulate(Node_T oNNode, char *pcAcc) {
+static void FT_strcatAccumulate(Node_T oNNode, char *pcAcc) {
    assert(pcAcc != NULL);
 
    if(oNNode != NULL) {
@@ -603,9 +641,9 @@ char *FT_toString(void) {
       return NULL;
 
    nodes = DynArray_new(ulCount);
-   (void) DT_preOrderTraversal(oNRoot, nodes, 0);
+   (void) FT_preOrderTraversal(oNRoot, nodes, 0);
 
-   DynArray_map(nodes, (void (*)(void *, void*)) DT_strlenAccumulate,
+   DynArray_map(nodes, (void (*)(void *, void*)) FT_strlenAccumulate,
                 (void*) &totalStrlen);
 
    result = malloc(totalStrlen);
@@ -615,7 +653,7 @@ char *FT_toString(void) {
    }
    *result = '\0';
 
-   DynArray_map(nodes, (void (*)(void *, void*)) DT_strcatAccumulate,
+   DynArray_map(nodes, (void (*)(void *, void*)) FT_strcatAccumulate,
                 (void *) result);
 
    DynArray_free(nodes);
