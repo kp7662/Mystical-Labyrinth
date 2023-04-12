@@ -186,6 +186,7 @@ int FT_insertDir(const char *pcPath) {
    /* Check whether if parent is a file */
    /* Write a getter function of the file state */
    if (oNCurr != NULL &&  Node_getIsFile(oNCurr) == TRUE) {
+        Path_free(oPPath);
         return NOT_A_DIRECTORY;
      }
 
@@ -343,12 +344,14 @@ int FT_insertFile(const char *pcPath, void *pvContents,
 
    /* cannot insert file at the root. */
    if(oNCurr == NULL && ulDepth == 1) {
+      Path_free(oPPath);
       return CONFLICTING_PATH;
    }
    
    /* Check whether if parent is a file */
    if (oNCurr != NULL && Node_getIsFile(oNCurr) == TRUE) {
-        return NOT_A_DIRECTORY;
+      Path_free(oPPath);
+      return NOT_A_DIRECTORY;
    }
 
    if(oNCurr == NULL) /* new root! */
@@ -403,6 +406,7 @@ int FT_insertFile(const char *pcPath, void *pvContents,
    iStatus = Node_new(oPPath, oNCurr, &oNNewNode, TRUE, pvContents, ulLength);
    if(iStatus != SUCCESS) {
       Path_free(oPPath);
+      Node_free(oNCurr);
       if(oNFirstNew != NULL)
          (void) Node_free(oNFirstNew);
       /* assert(CheckerDT_isValid(bIsInitialized, oNRoot, ulCount)); */
