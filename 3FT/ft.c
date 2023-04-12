@@ -185,7 +185,7 @@ int FT_insertDir(const char *pcPath) {
 
    /* Check whether if parent is a file */
    /* Write a getter function of the file state */
-   if (oNCurr == NULL &&  Node_getIsFile(oNCurr) == TRUE) {
+   if (oNCurr != NULL &&  Node_getIsFile(oNCurr) == TRUE) {
         return NOT_A_DIRECTORY;
      }
 
@@ -264,7 +264,7 @@ boolean FT_containsDir(const char *pcPath) {
 
    iStatus = FT_findNode(pcPath, &oNFound);
 
-   if(Node_getIsFile(oNFound) == TRUE) {
+   if(oNFound != NULL && Node_getIsFile(oNFound) == TRUE) {
     iStatus = NOT_A_DIRECTORY; 
    } 
 
@@ -280,7 +280,7 @@ int FT_rmDir(const char *pcPath) {
 
    iStatus = FT_findNode(pcPath, &oNFound);
 
-   if(Node_getIsFile(oNFound) == TRUE) {
+   if(oNFound != NULL && Node_getIsFile(oNFound) == TRUE) {
     return NOT_A_DIRECTORY;
    }
 
@@ -343,7 +343,7 @@ int FT_insertFile(const char *pcPath, void *pvContents,
    }
    
    /* Check whether if parent is a file */
-   if (Node_getIsFile(oNCurr) == FALSE) {
+   if (oNCurr != NULL && Node_getIsFile(oNCurr) == FALSE) {
         return NOT_A_FILE;
    }
 
@@ -434,7 +434,7 @@ boolean FT_containsFile(const char *pcPath) {
 
    iStatus = FT_findNode(pcPath, &oNFound);
 
-   if(Node_getIsFile(oNFound) == FALSE) {
+   if(oNFound != NULL && Node_getIsFile(oNFound) == FALSE) {
     iStatus = NOT_A_FILE; 
    } 
 
@@ -450,7 +450,7 @@ int FT_rmFile(const char *pcPath) {
 
    iStatus = FT_findNode(pcPath, &oNFound);
 
-   if(Node_getIsFile(oNFound) == FALSE) {
+   if(oNFound != NULL && Node_getIsFile(oNFound) == FALSE) {
     return NOT_A_FILE;
    }
 
@@ -639,7 +639,7 @@ char *FT_toString(void) {
 
    if(!bIsInitialized)
       return NULL;
-
+   
    nodes = DynArray_new(ulCount);
    (void) FT_preOrderTraversal(oNRoot, nodes, 0);
 

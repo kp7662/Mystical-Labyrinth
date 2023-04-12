@@ -8,22 +8,22 @@ all: ft
 clobber: clean
 	rm -f *~ \#*|#
 clean: 
-	rm -f ft *.0
+	rm -f ft *.o
 
 ft: dynarray.o path.o node.o ft.o ft_client.o
 	gcc217 -g dynarray.o path.o node.o ft.o ft_client.o -o ft
 
 dynarray.o: dynarray.c dynarray.h
-	gcc217 -c dynarray.c
+	gcc217 -g -c dynarray.c
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
 path.o: path.c dynarray.h path.h a4def.h
-	gcc217 -c path.c
+	gcc217 -g -c path.c
 
 ft_client.o: ft_client.c ft.h a4def.h
-	gcc217 -c ft_client.c
+	gcc217 -g -c ft_client.c
 
 node.o: node.c dynarray.h node.h path.h a4def.h
-	gcc217 -c node.c
+	gcc217 -g -c node.c
 
 ft.o: ft.c dynarray.h node.h ft.h path.h a4def.h
-	gcc217 -c ft.c
+	gcc217 -g -c ft.c

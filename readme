@@ -133,6 +133,30 @@ the error manifests itself or is "noticed" by the client.
 What are your critiques of the given DT implementations, as
 specified in Step 2.5?
 
+- DT_insert checks for errors and returns error codes but lacks details 
+about the errors. Print error messages to standard error to let client 
+better understand the nature of errors. For example, we can add a line 
+fprintf(stderr, "NO_SUCH_PATH: no node with this input path exists in the 
+hierarchy.\n" before returning the error code.
+
+- DT_insert contains duplicated codes. Use helper functions to avoid code 
+duplication for easier maintanence. For example, in between Line 224 and 240 
+in dtGood.c, same block of code has been called twice. Instead, we can write 
+a helper function to perform the same funationality without repeating the 
+same block of code twice in DT_insert.
+
+- DT_insert is too long and makes it hard to trace the code. Modularize code 
+by breaking down the method into smaller functions for easier maintainence.
+
+- The modules are well-designed and consistent that make the code 
+easier to maintain. For example, each function name starts with 
+a consistent "DT_".
+
+- Each non-static function has a comment in the header file that follows the 
+standard comment conventions as specified in Lecture 4, which include parameters, 
+description of the code, the return values, and updates on global states. 
+Each static function also has a comment in the implementation file that 
+follows the standard comment conventions.
 
 
 ------------------------------------------------------------------------

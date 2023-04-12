@@ -338,8 +338,7 @@ void *Node_replaceFileContents(Node_T oNNode, void *pvNewContents, size_t newCon
 }
 
 boolean Node_getIsFile(Node_T oNNode) {
-   assert(oNNode != NULL);
-
+   
    return oNNode->isFile; 
 }
 
