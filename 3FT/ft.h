@@ -102,7 +102,7 @@ void *FT_replaceFileContents(const char *pcPath, void *pvNewContents,
                              size_t ulNewLength);
 
 /*
-  Returns SUCCESS if pcPath exists in the hierarchy,
+  Returns SUCCESS if pcPath exist,
   Otherwise, returns:
   * INITIALIZATION_ERROR if the FT is not in an initialized state
   * BAD_PATH if pcPath does not represent a well-formatted path

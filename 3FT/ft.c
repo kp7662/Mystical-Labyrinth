@@ -522,15 +522,17 @@ int FT_stat(const char *pcPath, boolean *pbIsFile, size_t *pulSize) {
 
    iStatus = FT_findNode(pcPath, &oNFound);
 
-   if(Node_getIsFile(oNFound) == TRUE) {
-      *pbIsFile = TRUE; 
-      *pulSize = Node_getContentLength(oNFound);
+   if(iStatus == SUCCESS) {
+      if(oNFound != NULL && Node_getIsFile(oNFound) == TRUE) {
+         *pbIsFile = TRUE; 
+         *pulSize = Node_getContentLength(oNFound);
+      }
+      else if(oNFound != NULL && Node_getIsFile(oNFound) == FALSE) {
+         *pbIsFile = FALSE; 
+      }
    }
-   else {
-      *pbIsFile = FALSE; 
-   }
-   
-   return (boolean) (iStatus == SUCCESS);
+
+   return iStatus;
 }
 
 int FT_init(void) {
