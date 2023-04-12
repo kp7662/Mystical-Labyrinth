@@ -280,6 +280,10 @@ int FT_rmDir(const char *pcPath) {
 
    iStatus = FT_findNode(pcPath, &oNFound);
 
+   /* if(oNFound == NULL) {
+      return NO_SUCH_PATH; 
+   } */
+
    if(oNFound != NULL && Node_getIsFile(oNFound) == TRUE) {
     return NOT_A_DIRECTORY;
    }
@@ -343,8 +347,8 @@ int FT_insertFile(const char *pcPath, void *pvContents,
    }
    
    /* Check whether if parent is a file */
-   if (oNCurr != NULL && Node_getIsFile(oNCurr) == FALSE) {
-        return NOT_A_FILE;
+   if (oNCurr != NULL && Node_getIsFile(oNCurr) == TRUE) {
+        return NOT_A_DIRECTORY;
    }
 
    if(oNCurr == NULL) /* new root! */
@@ -411,9 +415,9 @@ int FT_insertFile(const char *pcPath, void *pvContents,
       oNFirstNew = oNCurr;
    ulIndex++;
 
-   oNCurr = oNNewNode;
+   /* oNCurr = oNNewNode;
    ulNewNodes++;
-   ulIndex++;
+   ulIndex++; */
 
    Path_free(oPPath);
    /* update DT state variables to reflect insertion */

@@ -225,9 +225,6 @@ size_t Node_free(Node_T oNNode) {
         }
         DynArray_free(oNNode->oDChildren);
    }
-   else {
-      DynArray_free(oNNode->oDChildren);
-   }
    
    /* remove path */
    Path_free(oNNode->oPPath);
