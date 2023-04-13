@@ -47,7 +47,6 @@ boolean FT_containsDir(const char *pcPath);
 */
 int FT_rmDir(const char *pcPath);
 
-
 /*
    Inserts a new file into the FT with absolute path pcPath, with
    file contents pvContents of size ulLength bytes.
@@ -62,7 +61,7 @@ int FT_rmDir(const char *pcPath);
    * MEMORY_ERROR if memory could not be allocated to complete request
 */
 int FT_insertFile(const char *pcPath, void *pvContents,
-                  size_t ulLength);
+                  size_t ulLength);                  
 
 /*
   Returns TRUE if the FT contains a file with absolute path
