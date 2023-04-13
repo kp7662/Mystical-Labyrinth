@@ -15,10 +15,13 @@
 typedef struct node *Node_T;
 
 /*
-  Creates a new node in the Directory Tree, with path oPPath and
-  parent oNParent. Returns an int SUCCESS status and sets *poNResult
-  to be the new node if successful. Otherwise, sets *poNResult to NULL
-  and returns status:
+  Creates a new node in the File Tree, with path oPPath,
+  parent oNParent, and type specified by isFile. If the node 
+  is a file, the file's contents are specified by contents, and 
+  the file's contents size is specified by contentSize. Returns 
+  an int SUCCESS status and sets *poNResult to be the new node 
+  if successful. Otherwise, sets *poNResult to NULL and returns 
+  status:
   * MEMORY_ERROR if memory could not be allocated to complete request
   * CONFLICTING_PATH if oNParent's path is not an ancestor of oPPath
   * NO_SUCH_PATH if oPPath is of depth 0
@@ -28,10 +31,6 @@ typedef struct node *Node_T;
 */
 
 int Node_new(Path_T oPPath, Node_T oNParent, Node_T *poNResult, boolean isFile, void *contents, size_t contentSize);
-
-/* Can we have two functions that takes in different parameters? */
-/* int Node_new(Path_T oPPath, Node_T oNParent, Node_T *poNResult, boolean isFile); */
-
 
 /*
   Destroys and frees all memory allocated for the subtree rooted at
@@ -90,16 +89,21 @@ int Node_compare(Node_T oNFirst, Node_T oNSecond);
 char *Node_toString(Node_T oNNode);
 
 
-/* Check to see if node is a file (TRUE) or directory (FALSE) */
+/* Returns TRUE is oNNode is a file and FALSE if oNNode is a directory. */
 boolean Node_getIsFile(Node_T oNNode);
 
-/* Replace contents of inside a node file. Return old contents */
+/* 
+  Replaces contents of oNNode with pvContents and resets the node's contentSize 
+  to be newContentSize . Return old contents of oNNode if oNNode  is a file, 
+  or NULL if oNNode is a directory. */
 void *Node_replaceFileContents(Node_T oNNode, void *pvContents, size_t newContentSize);  
 
-/* Get contents from a node file */
+/* 
+  Returns contents of oNNode if oNNode is a file, or NULL  if oNNode is 
+  a directory. */
 void * Node_getFileContents(Node_T oNNode);
 
-/* get content length */
+/* Returns content size of oNNode if oNNode is a file, or 0 if oNNode is a directory. */
 size_t Node_getContentLength(Node_T oNNode);
 
 #endif

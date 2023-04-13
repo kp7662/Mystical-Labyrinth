@@ -3,15 +3,12 @@
 /* Author: Kok Wei Pua and Cherie Jiraphanphong                       */
 /*--------------------------------------------------------------------*/
 
-/* Do we need to put child in lexicographic order through Node*/
-
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
 #include "dynarray.h"
 #include "node.h"
 
-/* Can we assume contents is string? */
 
 /* A node in a FT (can either be a file or a directory) */
 struct node {
@@ -22,14 +19,14 @@ struct node {
    /* the object containing links to this node's children */
    DynArray_T oDChildren;
 
-    /* check if the node is a file */
+    /* the node's type (file or directory) */
     boolean isFile;
-    /* contents of the file node */
+    /* the file's content */
     void *contents;
-    /* content size */
+    /* the file's content size */
     size_t contentSize;
 };
-
+/*--------------------------------------------------------------------*/
 
 /*
   Links new child oNChild into oNParent's children array at index
@@ -46,6 +43,7 @@ static int Node_addChild(Node_T oNParent, Node_T oNChild,
    else
       return MEMORY_ERROR;
 }
+/*--------------------------------------------------------------------*/
 
 /*
   Compares the string representation of oNfirst with a string
@@ -60,7 +58,7 @@ static int Node_compareString(const Node_T oNFirst,
 
    return Path_compareString(oNFirst->oPPath, pcSecond);
 }
-
+/*--------------------------------------------------------------------*/
 
 /*
   Creates a new node with path oPPath and parent oNParent.  Returns an
@@ -83,7 +81,6 @@ int Node_new(Path_T oPPath, Node_T oNParent, Node_T *poNResult, boolean isFile, 
    int iStatus;
 
    assert(oPPath != NULL);
-   /* assert(oNParent == NULL || CheckerDT_Node_isValid(oNParent)); */ /* Do we need this? */
 
    /* allocate space for a new node */
    psNew = malloc(sizeof(struct node));
@@ -156,17 +153,16 @@ int Node_new(Path_T oPPath, Node_T oNParent, Node_T *poNResult, boolean isFile, 
 
    /* initialize the new node */
    psNew->isFile = isFile;
+   /* if new node is a file */
    if(psNew->isFile == TRUE) {
-      /* Need to consider what happen when contents = NULL. */
       if(contents == NULL) {
          psNew->contents = NULL;
          psNew->contentSize = 0; 
       }
       else {
-         /* Line 169: Because file cannot have children, can we just point psNew->oDChildren to NULL? */
          psNew->contents = contents; 
          psNew->contentSize = contentSize; 
-         psNew->oDChildren = NULL; /* Double check */
+         psNew->oDChildren = NULL;
       }
    }
     /* if new node is a directory */
@@ -196,19 +192,15 @@ int Node_new(Path_T oPPath, Node_T oNParent, Node_T *poNResult, boolean isFile, 
 
    *poNResult = psNew;
 
-    /* Do we need CheckerDT_Node_isValid? Do we need to write our own checker function? */
-      /* assert(oNParent == NULL || CheckerDT_Node_isValid(oNParent)); */
-      /* assert(CheckerDT_Node_isValid(*poNResult)); */ 
-
    return SUCCESS;
 }
+/*--------------------------------------------------------------------*/
 
 size_t Node_free(Node_T oNNode) {
    size_t ulIndex;
    size_t ulCount = 0;
 
    assert(oNNode != NULL);
-   /* assert(CheckerDT_Node_isValid(oNNode)); */
 
    /* remove from parent's list */
    if(oNNode->oNParent != NULL) {
@@ -237,6 +229,7 @@ size_t Node_free(Node_T oNNode) {
    ulCount++;
    return ulCount;
 }
+/*--------------------------------------------------------------------*/
 
 Path_T Node_getPath(Node_T oNNode) {
    assert(oNNode != NULL);
@@ -260,6 +253,7 @@ boolean Node_hasChild(Node_T oNParent, Path_T oPPath,
             (char*) Path_getPathname(oPPath), pulChildID,
             (int (*)(const void*,const void*)) Node_compareString);
 }
+/*--------------------------------------------------------------------*/
 
 size_t Node_getNumChildren(Node_T oNParent) {
    assert(oNParent != NULL);
@@ -271,6 +265,7 @@ size_t Node_getNumChildren(Node_T oNParent) {
 
    return DynArray_getLength(oNParent->oDChildren);
 }
+/*--------------------------------------------------------------------*/
 
 int Node_getChild(Node_T oNParent, size_t ulChildID,
                    Node_T *poNResult) {
@@ -293,6 +288,7 @@ int Node_getChild(Node_T oNParent, size_t ulChildID,
       return SUCCESS;
    }
 }
+/*--------------------------------------------------------------------*/
 
 Node_T Node_getParent(Node_T oNNode) {
    assert(oNNode != NULL);
@@ -306,9 +302,8 @@ int Node_compare(Node_T oNFirst, Node_T oNSecond) {
 
    return Path_comparePath(oNFirst->oPPath, oNSecond->oPPath);
 }
+/*--------------------------------------------------------------------*/
 
-/* Not sure if need to change anything and if iterating through the children of both directory and 
-files has an effect on how it iterates through. */
 char *Node_toString(Node_T oNNode) {
    char *copyPath;
 
@@ -320,6 +315,7 @@ char *Node_toString(Node_T oNNode) {
    else
       return strcpy(copyPath, Path_getPathname(Node_getPath(oNNode)));
 }
+/*--------------------------------------------------------------------*/
 
 void *Node_replaceFileContents(Node_T oNNode, void *pvNewContents, size_t newContentSize) {
    const void *pvOldContents; 
@@ -336,11 +332,13 @@ void *Node_replaceFileContents(Node_T oNNode, void *pvNewContents, size_t newCon
    
    return (void*)pvOldContents;
 }
+/*--------------------------------------------------------------------*/
 
 boolean Node_getIsFile(Node_T oNNode) {
    
    return oNNode->isFile; 
 }
+/*--------------------------------------------------------------------*/
 
 void *Node_getFileContents(Node_T oNNode) {
    assert(oNNode != NULL);
@@ -351,12 +349,13 @@ void *Node_getFileContents(Node_T oNNode) {
 
    return oNNode->contents;
 }
+/*--------------------------------------------------------------------*/
 
 size_t Node_getContentLength(Node_T oNNode) {
    assert(oNNode != NULL);
 
    if (oNNode->isFile == FALSE) {
-      return 0; /* should it be 0 or null */ 
+      return 0;
    }
 
    return oNNode->contentSize; 
