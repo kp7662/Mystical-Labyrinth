@@ -29,8 +29,8 @@ typedef struct node *Node_T;
                  or oNParent is NULL but oPPath is not of depth 1
   * ALREADY_IN_TREE if oNParent already has a child with this path
 */
-
-int Node_new(Path_T oPPath, Node_T oNParent, Node_T *poNResult, boolean isFile, void *contents, size_t contentSize);
+int Node_new(Path_T oPPath, Node_T oNParent, Node_T *poNResult, 
+             boolean isFile, void *contents, size_t contentSize);
 
 /*
   Destroys and frees all memory allocated for the subtree rooted at
@@ -93,10 +93,11 @@ char *Node_toString(Node_T oNNode);
 boolean Node_getIsFile(Node_T oNNode);
 
 /* 
-  Replaces contents of oNNode with pvContents and resets the node's contentSize 
+  Replaces contents of oNNode with pvNewContents and resets the node's contentSize 
   to be newContentSize . Return old contents of oNNode if oNNode  is a file, 
   or NULL if oNNode is a directory. */
-void *Node_replaceFileContents(Node_T oNNode, void *pvContents, size_t newContentSize);  
+void *Node_replaceFileContents(Node_T oNNode, void *pvNewContents, 
+                               size_t newContentSize);  
 
 /* 
   Returns contents of oNNode if oNNode is a file, or NULL  if oNNode is 

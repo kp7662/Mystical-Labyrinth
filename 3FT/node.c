@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------*/
-/* nodeDT.c                                                           */
+/* node.c                                                           */
 /* Author: Kok Wei Pua and Cherie Jiraphanphong                       */
 /*--------------------------------------------------------------------*/
 
@@ -60,18 +60,8 @@ static int Node_compareString(const Node_T oNFirst,
 }
 /*--------------------------------------------------------------------*/
 
-/*
-  Creates a new node with path oPPath and parent oNParent.  Returns an
-  int SUCCESS status and sets *poNResult to be the new node if
-  successful. Otherwise, sets *poNResult to NULL and returns status:
-  * MEMORY_ERROR if memory could not be allocated to complete request
-  * CONFLICTING_PATH if oNParent's path is not an ancestor of oPPath
-  * NO_SUCH_PATH if oPPath is of depth 0
-                 or oNParent's path is not oPPath's direct parent
-                 or oNParent is NULL but oPPath is not of depth 1
-  * ALREADY_IN_TREE if oNParent already has a child with this path
-*/
-int Node_new(Path_T oPPath, Node_T oNParent, Node_T *poNResult, boolean isFile, void *contents, size_t contentSize) {
+int Node_new(Path_T oPPath, Node_T oNParent, Node_T *poNResult, 
+             boolean isFile, void *contents, size_t contentSize) {
    /* Intialize all arguments */
    struct node *psNew;
    Path_T oPParentPath = NULL;
@@ -317,7 +307,8 @@ char *Node_toString(Node_T oNNode) {
 }
 /*--------------------------------------------------------------------*/
 
-void *Node_replaceFileContents(Node_T oNNode, void *pvNewContents, size_t newContentSize) {
+void *Node_replaceFileContents(Node_T oNNode, void *pvNewContents, 
+                               size_t newContentSize) {
    const void *pvOldContents; 
 
    assert(oNNode != NULL);
